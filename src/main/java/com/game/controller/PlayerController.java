@@ -5,7 +5,6 @@ import com.game.entity.Profession;
 import com.game.entity.Race;
 import com.game.exceptions.BadRequestException;
 import com.game.exceptions.NotFoundException;
-import com.game.model.PlayerModel;
 import com.game.repository.specifications.PlayerSpecs;
 import com.game.service.PlayersService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,23 +28,21 @@ public class PlayerController {
     }
 
     @GetMapping("/players/{id}")
-    public ResponseEntity<PlayerModel> getPlayer(@PathVariable Long id) throws Exception {
+    public ResponseEntity getPlayer(@PathVariable Long id) {
         if (id <= 0) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("ID < 0");
         }
         try {
             return ResponseEntity.ok(playersService.getById(id));
-        } catch (BadRequestException ex) {
-            return ResponseEntity.badRequest().build();
-        } catch (NotFoundException ex) {
+        } catch (Exception ex) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/players/{id}")
-    public ResponseEntity<Long> deleteUser(@PathVariable Long id) {
+    public ResponseEntity deleteUser(@PathVariable Long id) {
         if (id <= 0) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Введен не валидный ID");
         }
         try {
             return ResponseEntity.ok(playersService.delete(id));
@@ -55,7 +52,7 @@ public class PlayerController {
     }
 
     @GetMapping("/players")
-    public ResponseEntity<List<Player>> getFilter(
+    public ResponseEntity getFilter(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "pageSize", defaultValue = "3") Integer pageSize,
@@ -78,7 +75,7 @@ public class PlayerController {
     }
 
     @GetMapping("/players/count")
-    public ResponseEntity<Integer> getCount(
+    public ResponseEntity getCount(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "pageSize", defaultValue = "40") Integer pageSize,
@@ -101,13 +98,13 @@ public class PlayerController {
     }
 
     @PostMapping("/players")
-    public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
+    public ResponseEntity createPlayer(@RequestBody Player player) {
         try {
             return ResponseEntity.ok(playersService.createPlayer(player));
 
         } catch (
                 BadRequestException ex) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("2");
         } catch (NotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
@@ -116,14 +113,14 @@ public class PlayerController {
     }
 
     @PostMapping("/players/{id}")
-    public ResponseEntity<Player> updatePlayer(@PathVariable Long id,
+    public ResponseEntity updatePlayer(@PathVariable Long id,
                                        @Validated @RequestBody Player player) {
         try {
             return ResponseEntity.ok(playersService.updatePlayer(id, player));
 
         } catch (
                 BadRequestException ex) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ex.getMessage());
         } catch (NotFoundException ex) {
             return ResponseEntity.notFound().build();
         }

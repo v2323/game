@@ -63,7 +63,7 @@ public class PlayersService {
     }
 
 
-    public PlayerModel getById(Long id) throws Exception {
+    public PlayerModel getById(Long id) {
         Player player = playersRepository.findById(id).get();
         return PlayerModel.toModel(player);
     }
