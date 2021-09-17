@@ -1,5 +1,8 @@
 package com.game.entity;
 
+import com.game.exceptions.BadRequestException;
+import com.game.exceptions.NotFoundException;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -47,6 +50,7 @@ public class Player {
     }
 
     public void setId(Long id) {
+        checkId(id);
         this.id = id;
     }
 
@@ -55,6 +59,9 @@ public class Player {
     }
 
     public void setName(String name) {
+        if (name.length() > 12) {
+            throw new BadRequestException();
+        }
         this.name = name;
     }
 
@@ -63,6 +70,9 @@ public class Player {
     }
 
     public void setTitle(String title) {
+        if(title.length() > 30){
+            throw new BadRequestException();
+        }
         this.title = title;
     }
 
@@ -87,6 +97,10 @@ public class Player {
     }
 
     public void setExperience(Integer experience) {
+        if(experience != null && (experience < 0 || experience > 10000000)){
+            throw new BadRequestException();
+
+        }
         this.experience = experience;
     }
 
@@ -111,6 +125,9 @@ public class Player {
     }
 
     public void setBirthday(Date birthday) {
+        if(birthday.getTime() <= 946684800L || birthday.getTime() >= 92461892400000L) {
+            throw new BadRequestException();
+        }
         this.birthday = birthday;
     }
 
@@ -147,4 +164,14 @@ public class Player {
         this.birthday = birthday;
         this.banned = banned;
     }
+
+    public void checkId(Long id){
+        if(id==null) {
+            throw new NotFoundException();
+        }
+        if(id <= 0) {
+            throw new BadRequestException();
+        }
+    }
+
 }

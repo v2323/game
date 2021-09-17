@@ -32,42 +32,36 @@ public class PlayersService {
         return (50 * (lvl + 1) * (lvl + 2) - exp);
     }
 
-    public void checkId(Long id) {
-        if(id <= 0) {
-    throw new BadRequestException();
-        } else  {
-            try {
-                playersRepository.findById(id).get();
-            } catch (Exception ex) {
-                throw new NotFoundException();
-            }
+    public Player createOrUpdatePlayer(Player tempPlayer, Player respPlayer) {
+        if (respPlayer.getName() != null) {
+            tempPlayer.setName(respPlayer.getName());
         }
+        if (respPlayer.getTitle() != null) {
+            tempPlayer.setTitle(respPlayer.getTitle());
+        }
+        if (respPlayer.getRace() != null) {
+            tempPlayer.setRace(respPlayer.getRace());
+        }
+        if (respPlayer.getProfession() != null) {
+            tempPlayer.setProfession(respPlayer.getProfession());
+        }
+
+        if (respPlayer.getBirthday() != null) {
+            tempPlayer.setBirthday(respPlayer.getBirthday());
+        }
+
+        if (respPlayer.getExperience() != null) {
+            tempPlayer.setExperience(respPlayer.getExperience());
+            tempPlayer.setLevel(calculateLvl(tempPlayer.getExperience()));
+            tempPlayer.setUntilNextLevel(calculateExpUntilNextLvl(tempPlayer.getLevel(), tempPlayer.getExperience()));
+        }
+        if(respPlayer.getBanned()!=null) {
+            tempPlayer.setBanned(respPlayer.getBanned());
+        }
+
+        return playersRepository.save(tempPlayer);
     }
 
-    public void checkExperience(Integer exp) {
-        if(exp != null && exp < 0 || exp > 10000000){
-            throw new BadRequestException();
-
-        }
-    }
-
-    public void checkDate(Long date) {
-        if(date <= 609L || date >= 92461892400000L) {
-            throw new BadRequestException();
-        }
-    }
-
-    public void checkName(String name) {
-        if (name.length() > 12) {
-            throw new BadRequestException();
-        }
-    }
-
-    public void checkTitle(String title) {
-        if(title.length() > 30){
-            throw new BadRequestException();
-        }
-    }
 
     public PlayerModel getById(Long id) throws Exception {
         Player player = playersRepository.findById(id).get();
@@ -83,80 +77,22 @@ public class PlayersService {
         return id;
     }
 
-    public Player updatePlayer(Long id, Player player) throws Exception {
-        checkId(id);
-        if(id==null){throw new NotFoundException();}
+    public Player updatePlayer(Long id, Player player) {
+        player.checkId(id);
+        if (id > playersRepository.count()) {
+            throw new NotFoundException();
+        }
         Player oldPlayer = playersRepository.findById(id).get();
-
-
-        if (player.getName() != null) {
-            checkName(player.getName());
-            oldPlayer.setName(player.getName());
-        }
-        if (player.getTitle() != null) {
-            oldPlayer.setTitle(player.getTitle());
-        }
-        if (player.getRace() != null) {
-            oldPlayer.setRace(player.getRace());
-        }
-        if (player.getProfession() != null) {
-            oldPlayer.setProfession(player.getProfession());
-        }
-
-        if (player.getBirthday() != null) {
-            checkDate(player.getBirthday().getTime());
-            oldPlayer.setBirthday(player.getBirthday());
-        }
-
-        if (player.getExperience() != null) {
-            checkExperience(player.getExperience());
-            oldPlayer.setExperience(player.getExperience());
-            oldPlayer.setLevel(calculateLvl(oldPlayer.getExperience()));
-            oldPlayer.setUntilNextLevel(calculateExpUntilNextLvl(oldPlayer.getLevel(), oldPlayer.getExperience()));
-        }
-        if(player.getBanned()!=null) {
-            oldPlayer.setBanned(player.getBanned());
-        }
-
-        return playersRepository.save(oldPlayer);
+        return createOrUpdatePlayer(oldPlayer, player);
     }
 
-    public Player createPlayer1(Player player) throws Exception {
+    public Player createPlayer(Player player){
 
-        Player oldPlayer = new Player();
-
-
-        if (player.getName() != null) {
-            checkName(player.getName());
-            oldPlayer.setName(player.getName());
-        } else{throw new BadRequestException();}
-        if (player.getTitle() != null) {
-            checkTitle(player.getTitle());
-            oldPlayer.setTitle(player.getTitle());
+        Player newPlayer = new Player();
+        if(player.getName()==null){
+            throw new BadRequestException();
         }
-        if (player.getRace() != null) {
-            oldPlayer.setRace(player.getRace());
-        }
-        if (player.getProfession() != null) {
-            oldPlayer.setProfession(player.getProfession());
-        }
-
-        if (player.getBirthday() != null) {
-            checkDate(player.getBirthday().getTime());
-            oldPlayer.setBirthday(player.getBirthday());
-        }
-
-        if (player.getExperience() != null) {
-            checkExperience(player.getExperience());
-            oldPlayer.setExperience(player.getExperience());
-            oldPlayer.setLevel(calculateLvl(oldPlayer.getExperience()));
-            oldPlayer.setUntilNextLevel(calculateExpUntilNextLvl(oldPlayer.getLevel(), oldPlayer.getExperience()));
-        }
-        if(player.getBanned()!=null) {
-            oldPlayer.setBanned(player.getBanned());
-        }
-
-        return playersRepository.save(oldPlayer);
+        return createOrUpdatePlayer(newPlayer, player);
     }
 
 
@@ -165,5 +101,6 @@ public class PlayersService {
         return playersRepository.findAll(playerSpecification, pageable);
     }
 }
+
 
 

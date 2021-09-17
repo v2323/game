@@ -5,6 +5,7 @@ import com.game.entity.Profession;
 import com.game.entity.Race;
 import com.game.exceptions.BadRequestException;
 import com.game.exceptions.NotFoundException;
+import com.game.model.PlayerModel;
 import com.game.repository.specifications.PlayerSpecs;
 import com.game.service.PlayersService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,21 +29,23 @@ public class PlayerController {
     }
 
     @GetMapping("/players/{id}")
-    public ResponseEntity getPlayer(@PathVariable Long id) {
+    public ResponseEntity<PlayerModel> getPlayer(@PathVariable Long id) throws Exception {
         if (id <= 0) {
-            return ResponseEntity.badRequest().body("Введен не валидный ID");
+            return ResponseEntity.badRequest().build();
         }
         try {
             return ResponseEntity.ok(playersService.getById(id));
-        } catch (Exception ex) {
+        } catch (BadRequestException ex) {
+            return ResponseEntity.badRequest().build();
+        } catch (NotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/players/{id}")
-    public ResponseEntity deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Long> deleteUser(@PathVariable Long id) {
         if (id <= 0) {
-            return ResponseEntity.badRequest().body("Введен не валидный ID");
+            return ResponseEntity.badRequest().build();
         }
         try {
             return ResponseEntity.ok(playersService.delete(id));
@@ -52,7 +55,7 @@ public class PlayerController {
     }
 
     @GetMapping("/players")
-    public ResponseEntity getFilter(
+    public ResponseEntity<List<Player>> getFilter(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "pageSize", defaultValue = "3") Integer pageSize,
@@ -65,28 +68,17 @@ public class PlayerController {
             @RequestParam(value = "profession", required = false) Profession profession,
             @RequestParam(value = "banned", required = false) Boolean banned,
             @RequestParam(value = "after", required = false) Long after,
-            @RequestParam(value = "before", required = false) Long before,
-            @RequestParam(value = "order", required = false) PlayerOrder order) {
+            @RequestParam(value = "before", required = false) Long before) {
 
 
-        Specification<Player> filter = Specification.where(PlayerSpecs.nameContains(name))
-                .and(PlayerSpecs.titleContains(title))
-                .and(PlayerSpecs.minExp(minExperience))
-                .and(PlayerSpecs.maxExp(maxExperience))
-                .and(PlayerSpecs.minLevel(minLevel))
-                .and(PlayerSpecs.maxLevel(maxLevel))
-                .and(PlayerSpecs.raceFilter(race))
-                .and(PlayerSpecs.professionFilter(profession))
-                .and(PlayerSpecs.bannedFilter(banned))
-                .and(PlayerSpecs.afterFilter(after))
-                .and(PlayerSpecs.beforeFilter(before));
+        Specification<Player> filter = new PlayerSpecs().getSpecs(name, title, minExperience, maxExperience, minLevel, maxLevel, race, profession, banned, after, before);
         List<Player> resultList = playersService.getAllPlayersWithFilter(filter, PageRequest.of(pageNumber, pageSize)).getContent();
         return ResponseEntity.ok(resultList);
 
     }
 
     @GetMapping("/players/count")
-    public ResponseEntity getCount(
+    public ResponseEntity<Integer> getCount(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "pageSize", defaultValue = "40") Integer pageSize,
@@ -99,20 +91,9 @@ public class PlayerController {
             @RequestParam(value = "profession", required = false) Profession profession,
             @RequestParam(value = "banned", required = false) Boolean banned,
             @RequestParam(value = "after", required = false) Long after,
-            @RequestParam(value = "before", required = false) Long before,
-            @RequestParam(value = "order", required = false) PlayerOrder order) {
+            @RequestParam(value = "before", required = false) Long before) {
 
-        Specification<Player> filter = Specification.where(PlayerSpecs.nameContains(name))
-                .and(PlayerSpecs.titleContains(title))
-                .and(PlayerSpecs.minExp(minExperience))
-                .and(PlayerSpecs.maxExp(maxExperience))
-                .and(PlayerSpecs.minLevel(minLevel))
-                .and(PlayerSpecs.maxLevel(maxLevel))
-                .and(PlayerSpecs.raceFilter(race))
-                .and(PlayerSpecs.professionFilter(profession))
-                .and(PlayerSpecs.bannedFilter(banned))
-                .and(PlayerSpecs.afterFilter(after))
-                .and(PlayerSpecs.beforeFilter(before));
+        Specification<Player> filter = new PlayerSpecs().getSpecs(name, title, minExperience, maxExperience, minLevel, maxLevel, race, profession, banned, after, before);
 
         List<Player> resultList = playersService.getAllPlayersWithFilter(filter, PageRequest.of(pageNumber, pageSize)).getContent();
         Integer count = resultList.size();
@@ -120,14 +101,13 @@ public class PlayerController {
     }
 
     @PostMapping("/players")
-    public ResponseEntity createPlayer(@RequestBody Player player
-    ) throws Exception{
-        try{
-            return ResponseEntity.ok(playersService.createPlayer1(player));
+    public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
+        try {
+            return ResponseEntity.ok(playersService.createPlayer(player));
 
         } catch (
                 BadRequestException ex) {
-            return ResponseEntity.badRequest().body("2");
+            return ResponseEntity.badRequest().build();
         } catch (NotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
@@ -136,17 +116,14 @@ public class PlayerController {
     }
 
     @PostMapping("/players/{id}")
-    public ResponseEntity updatePlayer(@PathVariable Long id,
-                                       @Validated @RequestBody Player player
-
-    ) throws Exception {
-
-        try{
+    public ResponseEntity<Player> updatePlayer(@PathVariable Long id,
+                                       @Validated @RequestBody Player player) {
+        try {
             return ResponseEntity.ok(playersService.updatePlayer(id, player));
 
-            } catch (
+        } catch (
                 BadRequestException ex) {
-            return ResponseEntity.badRequest().body("2");
+            return ResponseEntity.badRequest().build();
         } catch (NotFoundException ex) {
             return ResponseEntity.notFound().build();
         }

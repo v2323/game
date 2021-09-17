@@ -54,4 +54,19 @@ public class PlayerSpecs {
         return (root, query, cb)  -> before == null ? null : cb.lessThan(root.get("birthday"),new Date(before));
     }
 
+    public Specification<Player> getSpecs(String name, String title, Integer minExperience, Integer maxExperience, Integer minLevel, Integer maxLevel, Race race, Profession profession, Boolean banned, Long after, Long before){
+        Specification<Player> filter = Specification.where(PlayerSpecs.nameContains(name))
+                .and(titleContains(title))
+                .and(minExp(minExperience))
+                .and(maxExp(maxExperience))
+                .and(minLevel(minLevel))
+                .and(maxLevel(maxLevel))
+                .and(raceFilter(race))
+                .and(professionFilter(profession))
+                .and(bannedFilter(banned))
+                .and(afterFilter(after))
+                .and(beforeFilter(before));
+        return filter;
+    }
+
 }
